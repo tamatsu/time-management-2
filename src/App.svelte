@@ -13,6 +13,7 @@
 		fromMillis: (milliseconds: number) => DateTime
 		toLocaleString: (locale: Object) => string
 		TIME_24_SIMPLE: Object
+		DATETIME_SHORT: Object
 	}
 
 	type Model = {
@@ -80,6 +81,14 @@
 		return Object.entries(map)
 	}
 
+	function toDuration(items: Item[]): number {
+		const a = items.map(v => v.createdAt)
+		const min = Math.min(...a)
+		const max = Math.max(...a)
+
+		return max - min
+	}
+
 	function clickedProjectNameField(projectName: string) {
 		_log('clickedProjectNameField', projectName)
 
@@ -117,7 +126,8 @@
 				</div>
 			</div>
 		{/each}
-			<div class="flex justify-end">
+			<div class="flex justify-between">
+				<span class="text-sm flex-grow w-32">Total: {Math.floor(toDuration(items) / (60*1000))} min. </span>
 				<span class="text-sm text-gray-500" on:click={() => clickedProjectNameField(projectName)}>
 					[{projectName}]
 				</span>
