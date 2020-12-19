@@ -1,4 +1,5 @@
 <script lang="ts">
+
 	export var uuidv4: () => string
 	export var luxon: {
 		DateTime: DateTime
@@ -19,14 +20,18 @@
 	type Model = {
 		note: Note
 		newText: string
-		projectName: string
+		projectName: Project
+		projectGroups: ProjectGroup[]
 	}
+
+	type Project = string
+	type ProjectGroup = Project[]
 
 	interface Item {
 		id: string
 		content: string
 		createdAt: number
-		projectName: string
+		projectName: Project
 	}
 
 	
@@ -38,10 +43,16 @@
 		let note = new Note()
 		note.gotItems(Note.restore())
 
+		const map = toMap(note.items)
+		const projectGroups = map.map(([projectName, _]) => {
+			return [ projectName ]
+		})
+
 		return {
 			note,
 			newText: '',
 			projectName: '',
+			projectGroups
 		}
 	}
 
@@ -89,6 +100,18 @@
 		return max - min
 	}
 
+	function projectGroupToDuration(model: Model, projectGroup: ProjectGroup): number {
+		const map = toMap(model.note.items)
+
+		const sum = projectGroup.reduce((acc, cur) => {
+			const pair = map.find(([projectName, _]) => projectName === cur)
+			const items = pair[1]
+			return acc + toDuration(items)
+		}, 0)
+
+		return sum
+	}
+
 	function clickedProjectNameField(projectName: string) {
 		_log('clickedProjectNameField', projectName)
 
@@ -103,34 +126,48 @@
 
 </script>
 
-<main style="max-width: 480px;">
-	{(console.log('->', model), '')}
+<main class="flex">
+	<div style="max-width: 380px;">
+		{(console.log('->', model), '')}
 
-	<form id="form-new-item" on:submit|preventDefault={add}>
-		<input id="input-new-text" bind:value={model.newText} placeholder="new comment">
-		<button>+</button>
-		<textarea bind:value={model.projectName} placeholder="project name"></textarea>
-	</form>
-	<div id="items" class="flex flex-col">
-	{#each toMap(model.note.items) as [projectName, items]}
-		<div class="border-b">
-		{#each items.sort((a, b) => b.createdAt - a.createdAt) as item}
-			<div class="">
+		<form id="form-new-item" on:submit|preventDefault={add}>
+			<input id="input-new-text" bind:value={model.newText} placeholder="new comment">
+			<button>+</button>
+			<textarea bind:value={model.projectName} placeholder="project name"></textarea>
+		</form>
+		<div id="items" class="flex flex-col">
+		{#each toMap(model.note.items) as [projectName, items]}
+			<div class="border-b">
+			{#each items.sort((a, b) => b.createdAt - a.createdAt) as item}
 				<div class="">
-					<span class="text-sm text-gray-500">{toLocaleString(item.createdAt)}</span>
+					<div class="">
+						<span class="text-sm text-gray-500">{toLocaleString(item.createdAt)}</span>
 
+					</div>
+					<div>
+						&gt;
+						{item.content}
+					</div>
 				</div>
-				<div>
-					&gt;
-					{item.content}
+			{/each}
+				<div class="flex justify-between">
+					<span class="text-sm flex-grow w-32">Total: {Math.floor(toDuration(items) / (60*1000))} min. </span>
+					<span class="text-sm text-gray-500" on:click={() => clickedProjectNameField(projectName)}>
+						[{projectName}]
+					</span>
 				</div>
 			</div>
 		{/each}
-			<div class="flex justify-between">
-				<span class="text-sm flex-grow w-32">Total: {Math.floor(toDuration(items) / (60*1000))} min. </span>
-				<span class="text-sm text-gray-500" on:click={() => clickedProjectNameField(projectName)}>
-					[{projectName}]
-				</span>
+		</div>
+	</div>
+	<div>
+	{#each model.projectGroups as projectGroup}
+		<div>
+			<div>
+				{projectGroup}
+			</div>
+			<div>
+				{Math.floor(projectGroupToDuration(model, projectGroup) / (60*1000))} min.
 			</div>
 		</div>
 	{/each}
