@@ -9,4 +9,5 @@
 public/404.html
 .firebaserc
 
-
+# Cypress
+cypress/videos

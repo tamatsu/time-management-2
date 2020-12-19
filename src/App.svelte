@@ -97,12 +97,12 @@
 <main style="max-width: 480px;">
 	{(console.log('->', model), '')}
 
-	<form on:submit|preventDefault={add}>
-		<input bind:value={model.newText} placeholder="new comment">
+	<form id="form-new-item" on:submit|preventDefault={add}>
+		<input id="input-new-text" bind:value={model.newText} placeholder="new comment">
 		<button>+</button>
 		<textarea bind:value={model.projectName} placeholder="project name"></textarea>
 	</form>
-	<div class="flex flex-col">
+	<div id="items" class="flex flex-col">
 	{#each toMap(model.note.items) as [projectName, items]}
 		<div class="border-b">
 		{#each items.sort((a, b) => b.createdAt - a.createdAt) as item}
