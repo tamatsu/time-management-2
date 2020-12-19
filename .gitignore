@@ -5,3 +5,8 @@
 
 .vscode/
 
+# Firebase
+public/404.html
+.firebaserc
+
+
