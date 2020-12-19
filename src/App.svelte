@@ -27,6 +27,8 @@
 	type Project = string
 	type ProjectGroup = Project[]
 
+	type PairsOfProjectAndItems = Array<[string, Item[]]>
+
 	interface Item {
 		id: string
 		content: string
@@ -43,8 +45,8 @@
 		let note = new Note()
 		note.gotItems(Note.restore())
 
-		const map = toMap(note.items)
-		const projectGroups = map.map(([projectName, _]) => {
+		const pairs: PairsOfProjectAndItems = toPairs(note.items)
+		const projectGroups = pairs.map(([projectName, _]) => {
 			return [ projectName ]
 		})
 
@@ -73,10 +75,10 @@
 
 	}
 
-	function toMap(items: Item[]): Array<[string, Item[]]> {
+	function toPairs(items: Item[]): PairsOfProjectAndItems {
 		let map = {}
 
-		const orderedItems = items.sort((a, b) => b.createdAt - a.createdAt)
+		const orderedItems: Item[] = items.sort((a, b) => b.createdAt - a.createdAt)
 
 		for (let item of orderedItems) {
 			const found = map[item.projectName]
@@ -101,10 +103,10 @@
 	}
 
 	function projectGroupToDuration(model: Model, projectGroup: ProjectGroup): number {
-		const map = toMap(model.note.items)
+		const pairs: PairsOfProjectAndItems = toPairs(model.note.items)
 
-		const sum = projectGroup.reduce((acc, cur) => {
-			const pair = map.find(([projectName, _]) => projectName === cur)
+		const sum: number = projectGroup.reduce((acc, cur) => {
+			const pair = pairs.find(([projectName, _]) => projectName === cur)
 			const items = pair[1]
 			return acc + toDuration(items)
 		}, 0)
@@ -136,7 +138,7 @@
 			<textarea bind:value={model.projectName} placeholder="project name"></textarea>
 		</form>
 		<div id="items" class="flex flex-col">
-		{#each toMap(model.note.items) as [projectName, items]}
+		{#each toPairs(model.note.items) as [projectName, items]}
 			<div class="border-b">
 			{#each items.sort((a, b) => b.createdAt - a.createdAt) as item}
 				<div class="">
