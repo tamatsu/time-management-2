@@ -156,7 +156,27 @@
 		return v
 	}
 
-</script>
+	function hashTo360(str: string): number {
+		const b = 360
+		const c = 17
+
+		return Array.from(str).reduce((acc, cur) => {
+			const n = cur.charCodeAt(0)
+
+			return ((acc * n + c) % b)
+		}, 1)
+	}
+
+	function toColorText(projectName: string): string {
+		if (projectName.length === 0) {
+			return ''
+		}
+		else {
+			const color = hashTo360(projectName)
+			return `background-color: hsl(${color}, 100%, 90%)`
+		}
+	}
+	</script>
 
 <main class="flex">
 	<div style="max-width: 380px;">
@@ -165,36 +185,40 @@
 		<form id="form-new-item" on:submit|preventDefault={add}>
 			<input id="input-new-text" bind:value={model.newText} placeholder="new comment">
 			<button>+</button>
-			<textarea bind:value={model.projectName} placeholder="project name"></textarea>
+			<textarea
+				style={toColorText(model.projectName)}
+				bind:value={model.projectName}
+				placeholder="project name"
+			></textarea>
 		</form>
 		<div id="items" class="flex flex-col">
-		{#each toPairs(model.note.items) as [projectName, items]}
-			<div class="border-b">
-			{#each items.sort((a, b) => b.createdAt - a.createdAt) as item}
-				<div class="">
-					<div class="">
-						<span class="text-sm text-gray-500">{toLocaleString(item.createdAt)}</span>
+			{#each toPairs(model.note.items) as [projectName, items]}
+				<div class="border-b">
+					{#each items.sort((a, b) => b.createdAt - a.createdAt) as item}
+						<div style={toColorText(item.projectName)} class="">
+							<div class="">
+								<span class="text-sm text-gray-500">{toLocaleString(item.createdAt)}</span>
 
-					</div>
-					<div>
-						&gt;
-						{item.content}
+							</div>
+							<div>
+								&gt;
+								{item.content}
+							</div>
+						</div>
+					{/each}
+					<div style={toColorText(projectName)} class="flex justify-between">
+						<span class="text-sm flex-grow w-32">Total: {Math.floor(toDuration(items) / (60*1000))} min. </span>
+						<span class="text-sm text-gray-500" on:click={() => clickedProjectNameField(projectName)}>
+							[{projectName}]
+						</span>
 					</div>
 				</div>
 			{/each}
-				<div class="flex justify-between">
-					<span class="text-sm flex-grow w-32">Total: {Math.floor(toDuration(items) / (60*1000))} min. </span>
-					<span class="text-sm text-gray-500" on:click={() => clickedProjectNameField(projectName)}>
-						[{projectName}]
-					</span>
-				</div>
-			</div>
-		{/each}
 		</div>
 	</div>
 	<div>
 	{#each model.projectManager.itemGroups as projectGroup}
-		<div on:dragstart={_ => dragStarted(projectGroup)} on:drop={dropped(projectGroup)} on:dragover={e => allowDrop(e, projectGroup)} draggable="true" class="p-1 border">
+		<div on:dragstart={_ => dragStarted(projectGroup)} on:drop={_ => dropped(projectGroup)} on:dragover={e => allowDrop(e, projectGroup)} draggable="true" class="p-1 border">
 			{projectGroup.items[0]}
 		</div>
 	{/each}
