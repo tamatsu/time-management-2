@@ -3,7 +3,7 @@ export type { ItemGroup }
 
 declare var uuidv4
 
-interface Item {}
+type Item = string
 
 interface ItemGroup {
   id: string
