@@ -114,6 +114,12 @@
 		return max - min
 	}
 
+	function projectToDuration(projectName: string): number {
+		const items = model.note.items.filter(v => v.projectName === projectName)
+
+		return toDuration(items)
+	}
+
 	// function projectGroupToDuration(model: Model, projectGroup: ProjectGroup): number {
 	// 	const pairs: PairsOfProjectAndItems = toPairs(model.note.items)
 
@@ -216,12 +222,27 @@
 			{/each}
 		</div>
 	</div>
-	<div>
-	{#each model.projectManager.itemGroups as projectGroup}
-		<div on:dragstart={_ => dragStarted(projectGroup)} on:drop={_ => dropped(projectGroup)} on:dragover={e => allowDrop(e, projectGroup)} draggable="true" class="p-1 border">
-			{projectGroup.items[0]}
+	<div style="width: 340px;" class="ml-2 pl-2 border-l border-dotted">
+		<div class="text-2xl font-bold">
+			Today
 		</div>
-	{/each}
+		{#each model.projectManager.itemGroups as projectGroup}
+			<div
+				on:dragstart={_ => dragStarted(projectGroup)}
+				on:drop={_ => dropped(projectGroup)}
+				on:dragover={e => allowDrop(e, projectGroup)}
+				draggable="true"
+				style={toColorText(projectGroup.items[0])}
+				class="w-full flex justify-between"
+			>
+				<div>
+					{projectGroup.items[0]}
+				</div>
+				<div class="text-red-800">
+					{Math.floor(projectToDuration(projectGroup.items[0]) / (60*1000))} min.
+				</div>
+			</div>
+		{/each}
 	</div>
 
 </main>
