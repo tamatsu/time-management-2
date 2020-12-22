@@ -8,6 +8,8 @@
 	export const model: Model = init()
 
 	import { Note } from './note.js'
+	import { Model as ProjectManager } from './projectGroup'
+	import type { ItemGroup as ProjectGroup } from './projectGroup'
 
 	// for luxon
 	interface DateTime {
@@ -21,11 +23,12 @@
 		note: Note
 		newText: string
 		projectName: Project
-		projectGroups: ProjectGroup[]
+		projectManager: ProjectManager
+		projectNames: Project[]
+		draggingProjectGroup: ProjectGroup
 	}
 
 	type Project = string
-	type ProjectGroup = Project[]
 
 	type PairsOfProjectAndItems = Array<[string, Item[]]>
 
@@ -45,31 +48,40 @@
 		let note = new Note()
 		note.gotItems(Note.restore())
 
-		const pairs: PairsOfProjectAndItems = toPairs(note.items)
-		const projectGroups = pairs.map(([projectName, _]) => {
-			return [ projectName ]
-		})
+		// const pairs: PairsOfProjectAndItems = toPairs(note.items)
+		// const projectGroups = pairs.map(([projectName, _]) => {
+		// 	return [ projectName ]
+		// })
 
 		return {
 			note,
 			newText: '',
 			projectName: '',
-			projectGroups
+			projectManager: new ProjectManager(),
+			projectNames: [],
+			draggingProjectGroup: null
 		}
 	}
 
 	function add() {
 		_log('add')
 
+		const projectName = model.projectName
 		const item: Item = {
 			id: uuidv4(),
 			content: model.newText,
 			createdAt: Date.now(),
-			projectName: model.projectName 
+			projectName
 		}
 
 		model.note = model.note.add(item)
 		model.note.store()
+
+		const found = model.projectNames.find(v => v === projectName)
+		if (! found) {
+			model.projectNames.push(projectName)
+			model.projectManager = model.projectManager.add(projectName)
+		}
 
 		model.newText = ''
 
@@ -102,22 +114,40 @@
 		return max - min
 	}
 
-	function projectGroupToDuration(model: Model, projectGroup: ProjectGroup): number {
-		const pairs: PairsOfProjectAndItems = toPairs(model.note.items)
+	// function projectGroupToDuration(model: Model, projectGroup: ProjectGroup): number {
+	// 	const pairs: PairsOfProjectAndItems = toPairs(model.note.items)
 
-		const sum: number = projectGroup.reduce((acc, cur) => {
-			const pair = pairs.find(([projectName, _]) => projectName === cur)
-			const items = pair[1]
-			return acc + toDuration(items)
-		}, 0)
+	// 	const sum: number = projectGroup.reduce((acc, cur) => {
+	// 		const pair = pairs.find(([projectName, _]) => projectName === cur)
+	// 		const items = pair[1]
+	// 		return acc + toDuration(items)
+	// 	}, 0)
 
-		return sum
-	}
+	// 	return sum
+	// }
 
 	function clickedProjectNameField(projectName: string) {
 		_log('clickedProjectNameField', projectName)
 
 		model.projectName = projectName
+	}
+
+	function dragStarted(g: ProjectGroup) {
+		_log('dragStarted', g)
+
+		model.draggingProjectGroup = g
+	}
+
+	function dropped(g: ProjectGroup) {
+		_log('dropped', g)
+
+		model.projectManager = model.projectManager.absorb(g, model.draggingProjectGroup)
+	}
+
+	function allowDrop(e: Event, g: ProjectGroup) {
+		if (ProjectManager.allowDrop(model.draggingProjectGroup, g)) {
+			e.preventDefault() // Allow drop
+		}
 	}
 
 	function _log(...v: any[]) {
@@ -163,14 +193,9 @@
 		</div>
 	</div>
 	<div>
-	{#each model.projectGroups as projectGroup}
-		<div>
-			<div>
-				{projectGroup}
-			</div>
-			<div>
-				{Math.floor(projectGroupToDuration(model, projectGroup) / (60*1000))} min.
-			</div>
+	{#each model.projectManager.itemGroups as projectGroup}
+		<div on:dragstart={_ => dragStarted(projectGroup)} on:drop={dropped(projectGroup)} on:dragover={e => allowDrop(e, projectGroup)} draggable="true" class="p-1 border">
+			{projectGroup.items[0]}
 		</div>
 	{/each}
 	</div>
