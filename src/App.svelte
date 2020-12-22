@@ -24,7 +24,6 @@
 		newText: string
 		projectName: Project
 		projectManager: ProjectManager
-		projectNames: Project[]
 		draggingProjectGroup: ProjectGroup
 	}
 
@@ -58,7 +57,6 @@
 			newText: '',
 			projectName: '',
 			projectManager: new ProjectManager(),
-			projectNames: [],
 			draggingProjectGroup: null
 		}
 	}
@@ -77,9 +75,7 @@
 		model.note = model.note.add(item)
 		model.note.store()
 
-		const found = model.projectNames.find(v => v === projectName)
-		if (! found) {
-			model.projectNames.push(projectName)
+		if (! model.projectManager.has(projectName)) {
 			model.projectManager = model.projectManager.add(projectName)
 		}
 

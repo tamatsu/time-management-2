@@ -42,6 +42,17 @@ class Model {
     return a.id !== b.id
   }
 
+  has(item: Item): boolean {
+    const found = this.items.find(v => v === item)
+
+    if (found) {
+      return true
+    }
+    else {
+      return false
+    }
+
+  }
 }
 
 
