@@ -114,8 +114,14 @@
 		return max - min
 	}
 
-	function projectToDuration(projectName: string): number {
-		const items = model.note.items.filter(v => v.projectName === projectName)
+	function projectToDurationToday(projectName: string): number {
+		const items = model.note.items
+		.filter(v => v.projectName === projectName)
+		.filter(v => {
+			const now = new Date()
+			const target = new Date(v.createdAt)
+			return now.toLocaleDateString() === target.toLocaleDateString() // Get today's items
+		})
 
 		return toDuration(items)
 	}
@@ -239,7 +245,7 @@
 					{projectGroup.items[0]}
 				</div>
 				<div class="text-red-800">
-					{Math.floor(projectToDuration(projectGroup.items[0]) / (60*1000))} min.
+					{Math.floor(projectToDurationToday(projectGroup.items[0]) / (60*1000))} min.
 				</div>
 			</div>
 		{/each}
