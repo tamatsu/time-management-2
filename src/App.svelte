@@ -83,6 +83,25 @@
 
 	}
 
+	function resetProjects() {
+		let m = new ProjectManager()
+
+		const items = model.note.items.filter(isToday)
+		items.forEach(item => {
+			if (! m.has(item.projectName)) {
+				m.add(item.projectName)
+			}
+		})
+
+		model.projectManager = m
+	}
+
+	function isToday(item: Item): boolean {
+		const now = new Date()
+		const target = new Date(item.createdAt)
+		return now.toLocaleDateString() === target.toLocaleDateString()
+	}
+
 	function toPairs(items: Item[]): PairsOfProjectAndItems {
 		let map = {}
 
@@ -113,11 +132,7 @@
 	function projectToDurationToday(projectName: string): number {
 		const items = model.note.items
 		.filter(v => v.projectName === projectName)
-		.filter(v => {
-			const now = new Date()
-			const target = new Date(v.createdAt)
-			return now.toLocaleDateString() === target.toLocaleDateString() // Get today's items
-		})
+		.filter(isToday)
 
 		return toDuration(items)
 	}
@@ -228,6 +243,9 @@
 		<div class="text-2xl font-bold">
 			Today
 		</div>
+		<button on:click={resetProjects}>
+			Reset
+		</button>
 		{#each model.projectManager.itemGroups as projectGroup}
 			<div
 				on:dragstart={_ => dragStarted(projectGroup)}
